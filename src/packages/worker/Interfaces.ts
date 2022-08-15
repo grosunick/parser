@@ -1,7 +1,7 @@
 export type PromiseId = number | string
-export type PromiseJob = Promise<string> | Promise<number>
+export type PromiseJob = Promise<PromiseId>
 export type PromiseMap = {[id: PromiseId]: PromiseJob}
 
 export interface IJob {
-    run(): Promise<string> | Promise <number>
+    run(): PromiseJob
 }

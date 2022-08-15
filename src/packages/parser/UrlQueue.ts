@@ -1,5 +1,4 @@
 import {IParser} from "./Interfaces";
-import {UriStatus} from "./ParsedUris";
 import {ParsedUris} from "./ParsedUris";
 
 export class UrlQueue

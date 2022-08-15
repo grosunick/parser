@@ -19,10 +19,11 @@ export class AsyncPool
                     break
             }
 
+            // waiting while the first job is finished
             let id = await Promise.race(this.pool.getJobs())
             this.pool.delete(id) // delete finished job from pool
 
-            nextJob(this.pool)
+            nextJob(this.pool) // add next job
         } while (this.pool.length())
     }
 }
