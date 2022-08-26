@@ -1,0 +1,6 @@
+[submodule "worker_ts"]
+	path = src/packages/ts_worker
+	url = git@github.com:grosunick/ts_worker.git
+[submodule "src/lib/worker"]
+	path = src/lib/worker
+	url = git@github.com:grosunick/ts_worker.git
