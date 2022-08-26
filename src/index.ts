@@ -1,7 +1,7 @@
 import * as DI from "./packages/di";
 import {AutoRuListParser} from "./packages/auto.ru/parser/AutoRuListParser";
-import {AsyncPool} from "./packages/worker/AsyncPool";
-import {nextJob} from "./packages/parser/Job";
+import {AsyncPool} from "./lib/worker/AsyncPool";
+import {ParserFetcher} from "./packages/parser/Job";
 
 let queue = DI.urlQueue();
 queue.add(new AutoRuListParser(
@@ -12,7 +12,7 @@ queue.add(new AutoRuListParser(
     let threadPool = new AsyncPool();
     await threadPool.run({
         threadsCount: 10
-    }, nextJob)
+    }, new ParserFetcher())
 
     console.log(queue.getParsedUrlsCount())
 })()

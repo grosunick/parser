@@ -1,51 +1,44 @@
 import {IFetcher, IParser, IParserResult} from "./Interfaces";
-import {PromisePool} from "../worker/PromisePool";
+import {PromisePool} from "../../lib/worker/PromisePool";
 import {UrlQueue} from "./UrlQueue";
-import {IJob} from "../worker/Interfaces"
+import {Job} from "../../lib/worker/Interfaces";
 import * as DI from "../di";
 
 let queue = DI.urlQueue()
 
-export class Job implements IJob
+function parse(parser: IParser, urlQueue: UrlQueue, fetcher: IFetcher): Promise<string> {
+    let url = parser.getUrl()
+
+    return fetcher.fetch(url)
+        .then(str => {
+            return parser.parse(str)
+        })
+        .then((res: IParserResult) => {
+            let [parsers, []] = res
+            urlQueue.addBatch(parsers)
+            return url
+        })
+        .catch(() => {
+            urlQueue.add(parser)
+            return url
+        });
+}
+
+export class ParserFetcher
 {
-    private readonly parser: IParser
-    private urlQueue: UrlQueue
-    private fetcher: IFetcher
+    nextJob(promisePool: PromisePool): boolean {
+        if (queue.isEmpty())
+            return false
 
-    constructor(parser: IParser, urlQueue: UrlQueue, fetcher: IFetcher) {
-        this.parser = parser;
-        this.urlQueue = urlQueue;
-        this.fetcher = fetcher;
-    }
+        let parser = queue.pop()
 
-    run(): Promise<string>  {
-        let url = this.parser.getUrl()
+        promisePool.add(parser.getUrl(), () => {
+            return parse(
+                parser, queue, DI.httpFetcher
+            )
+        });
 
-        return this.fetcher.fetch(url)
-            .then(str => {
-                return this.parser.parse(str)
-            })
-            .then((res: IParserResult) => {
-                let [parsers, []] = res
-                this.urlQueue.addBatch(parsers)
-                return url
-            })
-            .catch(() => {
-                this.urlQueue.add(this.parser)
-                return url
-            });
+        return true
     }
 }
 
-export function nextJob(promisePool: PromisePool): boolean {
-    if (queue.isEmpty())
-        return false
-
-    let parser = queue.pop()
-    let job = new Job(
-        parser, queue, DI.httpFetcher
-    )
-
-    promisePool.add(parser.getUrl(), job)
-    return true
-}
